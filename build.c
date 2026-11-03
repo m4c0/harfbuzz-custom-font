@@ -55,40 +55,67 @@ static int run(char ** args) {
 
 #define HB(base) if (!exists("out/"base".o")) RUN("clang++", DEBUG, "-c", "-o", "out/"base".o", "harfbuzz/src/"base".cc");
 
+#define HB_SRCS \
+  HB_SRC("hb-aat-layout") \
+  HB_SRC("hb-aat-map") \
+  HB_SRC("hb-blob") \
+  HB_SRC("hb-buffer") \
+  HB_SRC("hb-buffer-serialize") \
+  HB_SRC("hb-buffer-verify") \
+  HB_SRC("hb-common") \
+  HB_SRC("hb-draw") \
+  HB_SRC("hb-face") \
+  HB_SRC("hb-face-builder") \
+  HB_SRC("hb-fallback-shape") \
+  HB_SRC("hb-font") \
+  HB_SRC("hb-number") \
+  HB_SRC("hb-outline") \
+  HB_SRC("hb-ot-cff1-table") \
+  HB_SRC("hb-ot-cff2-table") \
+  HB_SRC("hb-ot-face") \
+  HB_SRC("hb-ot-font") \
+  HB_SRC("hb-ot-layout") \
+  HB_SRC("hb-ot-map") \
+  HB_SRC("hb-ot-metrics") \
+  HB_SRC("hb-ot-shape") \
+  HB_SRC("hb-ot-shape-fallback") \
+  HB_SRC("hb-ot-shape-normalize") \
+  HB_SRC("hb-ot-shaper-arabic") \
+  HB_SRC("hb-ot-shaper-default") \
+  HB_SRC("hb-ot-shaper-hangul") \
+  HB_SRC("hb-ot-shaper-hebrew") \
+  HB_SRC("hb-ot-shaper-indic") \
+  HB_SRC("hb-ot-shaper-indic-table") \
+  HB_SRC("hb-ot-shaper-khmer") \
+  HB_SRC("hb-ot-shaper-myanmar") \
+  HB_SRC("hb-ot-shaper-syllabic") \
+  HB_SRC("hb-ot-shaper-thai") \
+  HB_SRC("hb-ot-shaper-use") \
+  HB_SRC("hb-ot-shaper-vowel-constraints") \
+  HB_SRC("hb-ot-tag") \
+  HB_SRC("hb-ot-var") \
+  HB_SRC("hb-paint-bounded") \
+  HB_SRC("hb-paint-extents") \
+  HB_SRC("hb-paint") \
+  HB_SRC("hb-set") \
+  HB_SRC("hb-shape") \
+  HB_SRC("hb-shape-plan") \
+  HB_SRC("hb-shaper") \
+  HB_SRC("hb-static") \
+  HB_SRC("hb-ucd") \
+  HB_SRC("hb-unicode") \
+
 int main() {
   MKDIR("out");
 
-  HB("hb-blob");
-  HB("hb-buffer");
-  HB("hb-common");
-  HB("hb-face");
-  HB("hb-fallback-shape");
-  HB("hb-number");
-  HB("hb-ot-shape");
-  HB("hb-set");
-  HB("hb-shape");
-  HB("hb-shape-plan");
-  HB("hb-shaper");
-  HB("hb-static");
-  HB("hb-ucd");
-  HB("hb-unicode");
+#define HB_SRC(x) HB(x);
+  HB_SRCS;
+#undef HB_SRC
+#define HB_SRC(x) "out/"x".o",
 
   RUN("clang", "-Wall", DEBUG, "-Iharfbuzz/src", "-c", "-o", "out/hello.o", "hello.c");
   RUN("clang++", DEBUG, "-o", "out/hello.exe",
-      "out/hb-blob.o",
-      "out/hb-buffer.o",
-      "out/hb-common.o",
-      "out/hb-face.o",
-      "out/hb-fallback-shape.o",
-      "out/hb-number.o",
-      "out/hb-ot-shape.o",
-      "out/hb-set.o",
-      "out/hb-shape.o",
-      "out/hb-shape-plan.o",
-      "out/hb-shaper.o",
-      "out/hb-static.o",
-      "out/hb-ucd.o",
-      "out/hb-unicode.o",
+      HB_SRCS
       "out/hello.o");
   return 0;
 }
