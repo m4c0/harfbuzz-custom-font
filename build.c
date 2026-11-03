@@ -53,7 +53,7 @@ static int run(char ** args) {
 #  define MKDIR(x) mkdir(x)
 #endif
 
-#define HB(base) if (!exists("out/"base".o")) RUN("clang++", DEBUG, "-c", "-o", "out/"base".o", "harfbuzz/src/"base".cc");
+#define HB(base) if (!exists("out/"base".o")) RUN("clang++", DEBUG, "-DHB_NO_VAR_COMPOSITES", "-c", "-o", "out/"base".o", "harfbuzz/src/"base".cc");
 
 #define HB_SRCS \
   HB_SRC("hb-aat-layout") \
