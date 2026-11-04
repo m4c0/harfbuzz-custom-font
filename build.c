@@ -105,6 +105,10 @@ static int run(char ** args) {
   HB_SRC("hb-ucd") \
   HB_SRC("hb-unicode") \
 
+#define EXAMPLE(x) \
+  RUN("clang", "-Wall", DEBUG, "-Iharfbuzz/src", "-c", "-o", "out/"x".o", x".c"); \
+  RUN("clang++", DEBUG, "-o", "out/"x".exe", HB_SRCS "out/"x".o");
+
 int main() {
   MKDIR("out");
 
@@ -113,10 +117,8 @@ int main() {
 #undef HB_SRC
 #define HB_SRC(x) "out/"x".o",
 
-  RUN("clang", "-Wall", DEBUG, "-Iharfbuzz/src", "-c", "-o", "out/hello.o", "hello.c");
-  RUN("clang++", DEBUG, "-o", "out/hello.exe",
-      HB_SRCS
-      "out/hello.o");
+  EXAMPLE("hello");
+  EXAMPLE("latin-accent");
   return 0;
 }
 
