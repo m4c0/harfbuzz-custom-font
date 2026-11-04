@@ -5,6 +5,21 @@ static void draw_glyph(hb_codepoint_t gid, hb_position_t x, hb_position_t y) {
   fprintf(stderr, "glyph: %d -- @%d,%d\n", gid, x, y);
 }
 
+static int get_glyph(struct hb_font_t * font, void * font_data, unsigned int unicode, unsigned int * glyph, void * user_data) {
+  fprintf(stderr, "get_glyph %p %p -- %d -- %p %p\n", font, font_data, unicode, glyph, user_data);
+  return 69;
+}
+
+static int get_h_advance(struct hb_font_t * font, void * font_data, unsigned int unicode, void * user_data) {
+  fprintf(stderr, "get_h_advance %p %p -- %d -- %p\n", font, font_data, unicode, user_data);
+  return 69;
+}
+
+static hb_blob_t * ref_table(hb_face_t * face, hb_tag_t tag, void * user_data) {
+  fprintf(stderr, "ref_table %p %08x -- %p\n", face, tag, user_data);
+  return NULL;
+}
+
 int main() {
   hb_buffer_t * buf = hb_buffer_create();
   hb_buffer_add_utf8(buf, "Hello World!", -1, 0, -1);
@@ -12,11 +27,15 @@ int main() {
   hb_buffer_set_script(buf, HB_SCRIPT_LATIN);
   hb_buffer_set_language(buf, hb_language_from_string("en", -1));
 
-  hb_face_t * face = hb_face_get_empty();
-  hb_font_t * font = hb_font_create(face);
-  hb_face_destroy(face);
+  hb_font_funcs_t * funcs = hb_font_funcs_create();
+  hb_font_funcs_set_nominal_glyph_func(funcs, get_glyph, NULL, NULL);
+  hb_font_funcs_set_glyph_h_advance_func(funcs, get_h_advance, NULL, NULL);
 
-  hb_shape(font, buf, NULL, 0);
+  hb_face_t * face = hb_face_create_for_tables(ref_table, NULL, NULL);
+  hb_font_t * font = hb_font_create(face);
+  hb_font_set_funcs(font, funcs, NULL, NULL);
+
+  if (!hb_shape_full(font, buf, NULL, 0, NULL)) return 1;
 
   unsigned int glyph_count;
   hb_glyph_info_t * glyph_info    = hb_buffer_get_glyph_infos(buf, &glyph_count);
@@ -36,6 +55,7 @@ int main() {
   }
 
   hb_buffer_destroy(buf);
-  hb_font_destroy(font);
   hb_face_destroy(face);
+  hb_font_destroy(font);
+  hb_font_funcs_destroy(funcs);
 }
