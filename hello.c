@@ -1,8 +1,21 @@
 #include <hb.h>
 #include <stdio.h>
 
-static void draw_glyph(hb_codepoint_t gid, hb_position_t x, hb_position_t y) {
-  fprintf(stderr, "glyph: %d -- @%d,%d\n", gid, x, y);
+static void draw_glyph(hb_codepoint_t glyph, hb_position_t x, hb_position_t y) {
+  if (!glyph) {
+    fprintf(stderr, "<nil> @%d,%d\n", x, y);
+    return;
+  }
+
+  unsigned int unicode = glyph - 100000;
+
+  char c = 0;
+  if (unicode >= 'A' && unicode <= 'Z') c = unicode;
+  if (unicode >= 'a' && unicode <= 'z') c = unicode;
+  if (unicode == ' ') c = unicode;
+
+  if (!c) fprintf(stderr, "<?> @%d,%d\n", x, y);
+  else fprintf(stderr, "%c @%d,%d\n", c, x, y);
 }
 
 static hb_bool_t nominal_glyph(struct hb_font_t * font, void * font_data, hb_codepoint_t unicode, hb_codepoint_t * glyph, void * user_data) {
@@ -11,7 +24,7 @@ static hb_bool_t nominal_glyph(struct hb_font_t * font, void * font_data, hb_cod
 
   if (unicode >= 'A' && unicode <= 'Z') sup = 1;
   if (unicode >= 'a' && unicode <= 'z') sup = 1;
-  if (unicode == ' ') return 1;
+  if (unicode == ' ') sup = 1;
 
   if (sup) {
     *glyph = unicode + 100000;
