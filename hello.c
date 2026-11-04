@@ -5,18 +5,36 @@ static void draw_glyph(hb_codepoint_t gid, hb_position_t x, hb_position_t y) {
   fprintf(stderr, "glyph: %d -- @%d,%d\n", gid, x, y);
 }
 
-static int get_glyph(struct hb_font_t * font, void * font_data, unsigned int unicode, unsigned int * glyph, void * user_data) {
-  fprintf(stderr, "get_glyph %p %p -- %d -- %p %p\n", font, font_data, unicode, glyph, user_data);
-  return 69;
+static hb_bool_t nominal_glyph(struct hb_font_t * font, void * font_data, hb_codepoint_t unicode, hb_codepoint_t * glyph, void * user_data) {
+  // Let's pretend we have a font that only knows about latin letters;
+  int sup = 0;
+
+  if (unicode >= 'A' && unicode <= 'Z') sup = 1;
+  if (unicode >= 'a' && unicode <= 'z') sup = 1;
+  if (unicode == ' ') return 1;
+
+  if (sup) {
+    *glyph = unicode + 100000;
+    return 1;
+  }
+
+  fprintf(stderr, "unsupported unicode: %d (font %p)\n", unicode, font);
+  *glyph = 0;
+  return 0;
 }
 
-static int get_h_advance(struct hb_font_t * font, void * font_data, unsigned int unicode, void * user_data) {
-  fprintf(stderr, "get_h_advance %p %p -- %d -- %p\n", font, font_data, unicode, user_data);
-  return 69;
+static int get_h_advance(struct hb_font_t * font, void * font_data, hb_codepoint_t glyph, void * user_data) {
+  unsigned int unicode = glyph - 100000;
+  if (unicode >= 'A' && unicode <= 'Z') return 5;
+  if (unicode >= 'a' && unicode <= 'z') return 3;
+  if (unicode == ' ') return 2;
+  return 0;
 }
 
 static hb_blob_t * ref_table(hb_face_t * face, hb_tag_t tag, void * user_data) {
-  fprintf(stderr, "ref_table %p %08x -- %p\n", face, tag, user_data);
+  char * ctag = (char *)&tag;
+  char tagp[5] = { ctag[3], ctag[2], ctag[1], ctag[0], 0 };
+  fprintf(stderr, "ignoring request for reference table with tag '%s'\n", tagp);
   return NULL;
 }
 
@@ -28,7 +46,7 @@ int main() {
   hb_buffer_set_language(buf, hb_language_from_string("en", -1));
 
   hb_font_funcs_t * funcs = hb_font_funcs_create();
-  hb_font_funcs_set_nominal_glyph_func(funcs, get_glyph, NULL, NULL);
+  hb_font_funcs_set_nominal_glyph_func(funcs, nominal_glyph, NULL, NULL);
   hb_font_funcs_set_glyph_h_advance_func(funcs, get_h_advance, NULL, NULL);
 
   hb_face_t * face = hb_face_create_for_tables(ref_table, NULL, NULL);
