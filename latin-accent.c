@@ -13,6 +13,16 @@ static void draw_glyph(hb_codepoint_t glyph, hb_position_t x, hb_position_t y) {
     return;
   }
 
+  unicode = glyph - 200000;
+  if (unicode == 0x301) {
+    fprintf(stderr, "<'> @%d,%d\n", x, y);
+    return;
+  }
+  if (unicode == 0x303) {
+    fprintf(stderr, "<~> @%d,%d\n", x, y);
+    return;
+  }
+
   fprintf(stderr, "<?> @%d,%d\n", x, y);
 }
 
@@ -24,8 +34,14 @@ static hb_bool_t nominal_glyph(struct hb_font_t * font, void * font_data, hb_cod
     return 1;
   }
 
+  // Combining acute or tilde
+  if (unicode == 0x301 || unicode == 0x303) {
+    *glyph = unicode + 200000;
+    return 1;
+  }
+
   // 225/e1  = á
-  // 769/301 = (combining acuteaccent)
+  // 769/301 = (combining acute accent)
   // 227/e3  = ã
   // 771/303 = (combining tilde)
   // 233/e9  = é
@@ -36,9 +52,23 @@ static hb_bool_t nominal_glyph(struct hb_font_t * font, void * font_data, hb_cod
   return 0;
 }
 
+static hb_bool_t font_extent(hb_font_t * font, void * font_data, hb_font_extents_t * extents, void * user_data) {
+  *extents = (hb_font_extents_t) {
+    .ascender  =  5000,
+    .descender = -3000,
+    .line_gap  =  1000,
+  };
+  return 1;
+}
+
 static int get_h_advance(struct hb_font_t * font, void * font_data, hb_codepoint_t glyph, void * user_data) {
   unsigned int unicode = glyph - 100000;
-  if (unicode >= 32 && unicode <= 126) return 5;
+  if (unicode >= 32 && unicode <= 126) return 5000;
+
+  unicode = glyph - 200000;
+  if (unicode == 0x301) return 5000;
+  if (unicode == 0x303) return 5000;
+
   return 0;
 }
 
@@ -58,6 +88,7 @@ int main() {
 
   hb_font_funcs_t * funcs = hb_font_funcs_create();
   hb_font_funcs_set_nominal_glyph_func(funcs, nominal_glyph, NULL, NULL);
+  hb_font_funcs_set_font_v_extents_func(funcs, font_extent, NULL, NULL);
   hb_font_funcs_set_glyph_h_advance_func(funcs, get_h_advance, NULL, NULL);
 
   hb_face_t * face = hb_face_create_for_tables(ref_table, NULL, NULL);
